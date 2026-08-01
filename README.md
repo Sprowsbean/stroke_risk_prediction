@@ -74,6 +74,24 @@ Defined the business task above and selected a predictive modeling approach (rat
 - Given the model's limitations, this analysis is best used as a starting point for risk awareness, not a diagnostic tool. A more clinically complete dataset (with blood pressure readings, cholesterol, family history) would likely improve predictive performance meaningfully.
 - Future analysis could explore additional models (e.g. gradient boosting) or feature engineering (e.g. age-hypertension interaction terms) to address the precision/recall tradeoff currently limiting the model's practical usefulness.
 
+### Summary 
+
+Business Question: Can we predict stroke risk from health/lifestyle features, and which factors matter most?
+
+Approach: After cleaning the data (median-imputed BMI, removed a single "Other" gender row, dropped id), I ran independent t-tests and chi-square tests to check which variables were statistically associated with stroke, then built two predictive models — Logistic Regression and Random Forest — after encoding categorical variables, standardizing numeric features, and applying SMOTE to address the ~95%/5% class imbalance.
+
+Key Finding #1 — Which factors matter most:
+Age, average glucose level, hypertension, and BMI were consistently identified as the strongest predictors across three independent methods: statistical testing (t-test/chi-square), Random Forest's feature importance ranking, and (mostly) Logistic Regression's coefficients. This convergence across different methods gives confidence these are genuine patterns in the data.
+
+Key Finding #2 — Model comparison:
+Random Forest achieved higher raw accuracy (90% vs. 76.6%), but Logistic Regression achieved much higher recall (78% vs. 32%) and ROC-AUC (0.83 vs. 0.78). Since accuracy is misleading on an imbalanced dataset (a model predicting "no stroke" for everyone would already score ~95% accuracy), recall is the more meaningful metric for this early-warning use case — missing an actual stroke case is more costly than a false alarm. I re-ran Logistic Regression across 30 random train/test splits to confirm this performance was stable and not a result of one lucky split; recall and ROC-AUC stayed consistent across all 30 runs (recall mean ≈ 0.71, std ≈ 0.06).
+
+Key Finding #3 — A data-quality limitation I identified and diagnosed:
+Logistic Regression's coefficient for work_type_children appeared unusually large and statistically significant, contradicting both the stroke-rate chart (children ≈ 0% stroke rate) and Random Forest's importance ranking (near-zero for this feature). I traced this to its root cause: the entire dataset contains only one confirmed stroke case among 555 patients labeled work_type = children. Re-running the model across 30 random splits showed the coefficient was strongly positive whenever that single row landed in the training set, and flipped negative in the 3 runs where it didn't — a bimodal pattern directly caused by one data point's placement. This demonstrates that Maximum Likelihood Estimation can produce confident-looking coefficients even from statistically unsupported subgroups, and shows why a coefficient's size or p-value alone isn't sufficient evidence of a real predictive relationship — sample size and cross-method agreement matter too.
+
+Conclusion / Recommendation:
+Early-warning efforts should prioritize age, glucose levels, and hypertension as the most reliable risk indicators. The dataset's small number of total stroke cases (249 of 5,110) limits how much confidence can be placed in findings for smaller subgroups, and a larger, more clinically complete dataset (including blood pressure readings, cholesterol, and family history) would likely improve both model performance and the reliability of subgroup-level findings.
+
 ## Repository Structure
 
 ```
