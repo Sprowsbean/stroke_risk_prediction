@@ -1,0 +1,17 @@
+# Core
+pandas
+numpy
+
+# Visualization
+matplotlib
+seaborn
+
+# Statistics
+scipy
+statsmodels
+
+# Machine Learning & Modeling
+scikit-learn
+
+# Class Imbalance Handling
+imbalanced-learn
